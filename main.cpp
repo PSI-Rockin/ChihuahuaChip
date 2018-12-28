@@ -19,11 +19,12 @@ int main(int argc, char** argv)
     }
 
     printf("Opened %s successfully\n", argv[1]);
-    uint8_t* ROM = new uint8_t[0x503];
-    file.read((char*)ROM, 0x503);
+    int file_size = 0xF6;
+    uint8_t* ROM = new uint8_t[file_size];
+    file.read((char*)ROM, file_size);
     file.close();
     Emulator e;
-    e.load_rom(ROM, 0x503);
+    e.load_rom(ROM, file_size);
     e.reset();
     e.run();
     return 0;

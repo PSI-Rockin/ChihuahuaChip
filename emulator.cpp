@@ -8,12 +8,13 @@ Emulator::Emulator() : cpu((uint8_t*)memory)
 
 void Emulator::reset()
 {
+    memset(memory, 0xFF, 0x200);
     cpu.reset();
 }
 
 void Emulator::run()
 {
-    for (int i = 0; i < 500; i++)
+    for (int i = 0; i < 10000; i++)
         cpu.run();
 }
 
