@@ -14,11 +14,13 @@ class CPU
         uint8_t delay;
 
         uint8_t* memory;
+        uint32_t *framebuffer;
     public:
-        CPU(uint8_t* memory);
+        CPU(uint8_t* memory, uint32_t* framebuffer);
 
         void reset();
-        void run();
+        void run(int cycles);
+        void dec_delay();
 };
 
 #endif // CPU_HPP

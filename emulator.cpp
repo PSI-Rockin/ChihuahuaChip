@@ -1,7 +1,7 @@
 #include <cstring>
 #include "emulator.hpp"
 
-Emulator::Emulator() : cpu((uint8_t*)memory)
+Emulator::Emulator() : cpu((uint8_t*)memory, (uint32_t*)framebuffer)
 {
 
 }
@@ -9,13 +9,15 @@ Emulator::Emulator() : cpu((uint8_t*)memory)
 void Emulator::reset()
 {
     memset(memory, 0xFF, 0x200);
+    for (int i = 0; i < 64 * 32; i++)
+        framebuffer[i] = 0xFF000000;
     cpu.reset();
 }
 
 void Emulator::run()
 {
-    for (int i = 0; i < 10000; i++)
-        cpu.run();
+    cpu.run(10000000);
+    cpu.dec_delay();
 }
 
 void Emulator::load_rom(uint8_t *ROM, uint32_t size)
