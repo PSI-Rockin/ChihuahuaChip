@@ -3,8 +3,11 @@
 #include <fstream>
 #include "emulator.hpp"
 #include "displaywindow.hpp"
+#include "jitcache.hpp"
 
 using namespace std;
+
+typedef long (*func)(long);
 
 int main(int argc, char** argv)
 {
@@ -22,7 +25,7 @@ int main(int argc, char** argv)
     }
 
     printf("Opened %s successfully\n", argv[1]);
-    int file_size = 0xF6;
+    int file_size = 0x503;
     uint8_t* ROM = new uint8_t[file_size];
     file.read((char*)ROM, file_size);
     file.close();
@@ -36,7 +39,22 @@ int main(int argc, char** argv)
     int max_frames = 1000;
     int frames = 0;
 
-    while (frames < max_frames)
+    JitCache cache;
+    uint8_t* block = cache.alloc_block();
+
+    unsigned char code[] =
+    {
+      0x48, 0x89, 0xf8,                   // mov %rdi, %rax
+      0x48, 0x83, 0xc0, 0x08,             // add $8, %rax
+      0xc3                                // ret
+    };
+    memcpy(block, code, sizeof(code));
+
+    func f = reinterpret_cast<func>(block);
+    int blorp = f(24);
+    printf("Blorp: %d\n", blorp);
+
+    /*while (frames < max_frames)
     {
         e.run();
         frames++;
@@ -48,6 +66,6 @@ int main(int argc, char** argv)
             FPS = 60 / elapsed_seconds.count();
             printf("FPS: %f\n", FPS);
         }
-    }
+    }*/
     return 0;
 }

@@ -13,9 +13,11 @@ QMAKE_CFLAGS_RELEASE -= -O3
 SOURCES += main.cpp \
     emulator.cpp \
     cpu.cpp \
-    displaywindow.cpp
+    displaywindow.cpp \
+    jitcache.cpp
 
 HEADERS += \
     emulator.hpp \
     cpu.hpp \
-    displaywindow.hpp
+    displaywindow.hpp \
+    jitcache.hpp
