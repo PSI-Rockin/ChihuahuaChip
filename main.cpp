@@ -2,12 +2,11 @@
 
 #include <fstream>
 #include "emulator.hpp"
+#include "emitterx64.hpp"
 #include "displaywindow.hpp"
 #include "jitcache.hpp"
 
 using namespace std;
-
-typedef long (*func)(long);
 
 int main(int argc, char** argv)
 {
@@ -40,19 +39,13 @@ int main(int argc, char** argv)
     int frames = 0;
 
     JitCache cache;
-    uint8_t* block = cache.alloc_block();
+    cache.alloc_block(0x200);
+    Emitterx64 emitter(&cache);
+    emitter.xMOV64_MR(REG_64::RDI, REG_64::RAX);
+    emitter.xADD64_MI8(0x10, REG_64::RAX);
+    emitter.xRET();
 
-    unsigned char code[] =
-    {
-      0x48, 0x89, 0xf8,                   // mov %rdi, %rax
-      0x48, 0x83, 0xc0, 0x08,             // add $8, %rax
-      0xc3                                // ret
-    };
-    memcpy(block, code, sizeof(code));
-
-    func f = reinterpret_cast<func>(block);
-    int blorp = f(24);
-    printf("Blorp: %d\n", blorp);
+    cache.test();
 
     /*while (frames < max_frames)
     {

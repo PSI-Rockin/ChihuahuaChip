@@ -14,10 +14,12 @@ SOURCES += main.cpp \
     emulator.cpp \
     cpu.cpp \
     displaywindow.cpp \
-    jitcache.cpp
+    jitcache.cpp \
+    emitterx64.cpp
 
 HEADERS += \
     emulator.hpp \
     cpu.hpp \
     displaywindow.hpp \
-    jitcache.hpp
+    jitcache.hpp \
+    emitterx64.hpp
