@@ -27,13 +27,20 @@ class Emitterx64
     private:
         JitCache* cache;
 
-        uint8_t modrm(uint8_t mod, uint8_t reg, uint8_t rm);
+        void rexw_rm(REG_64 rm);
+        void rexw_r_rm(REG_64 reg, REG_64 rm);
+        void modrm(uint8_t mod, uint8_t reg, uint8_t rm);
     public:
         Emitterx64(JitCache* cache);
 
+        void xADD32_MI32_MEM(uint32_t imm, REG_64 indir_dest);
         void xADD64_MI8(uint8_t imm, REG_64 dest);
 
+        void xMOV32_MI(uint32_t imm, REG_64 dest);
         void xMOV64_MR(REG_64 source, REG_64 dest);
+        void xMOV64_OI(uint64_t imm, REG_64 dest);
+
+        void xCALL_INDIR(REG_64 source);
         void xRET();
 };
 

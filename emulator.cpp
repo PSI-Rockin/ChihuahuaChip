@@ -1,9 +1,10 @@
 #include <cstring>
 #include "emulator.hpp"
+#include "jittranslate.hpp"
 
 Emulator::Emulator() : cpu((uint8_t*)memory, (uint32_t*)framebuffer)
 {
-
+    JitTranslate::set_cpu(&cpu);
 }
 
 void Emulator::reset()
@@ -16,8 +17,14 @@ void Emulator::reset()
 
 void Emulator::run()
 {
-    cpu.run(10000000);
+    int max_cycles = 100000;
+    /*while (cpu.cycles < max_cycles)
+    {
+        JitTranslate::run();
+    }*/
+    cpu.run(max_cycles);
     cpu.dec_delay();
+    cpu.cycles -= max_cycles;
 }
 
 void Emulator::load_rom(uint8_t *ROM, uint32_t size)

@@ -38,16 +38,7 @@ int main(int argc, char** argv)
     int max_frames = 1000;
     int frames = 0;
 
-    JitCache cache;
-    cache.alloc_block(0x200);
-    Emitterx64 emitter(&cache);
-    emitter.xMOV64_MR(REG_64::RDI, REG_64::RAX);
-    emitter.xADD64_MI8(0x10, REG_64::RAX);
-    emitter.xRET();
-
-    cache.test();
-
-    /*while (frames < max_frames)
+    while (frames < max_frames)
     {
         e.run();
         frames++;
@@ -59,6 +50,6 @@ int main(int argc, char** argv)
             FPS = 60 / elapsed_seconds.count();
             printf("FPS: %f\n", FPS);
         }
-    }*/
+    }
     return 0;
 }

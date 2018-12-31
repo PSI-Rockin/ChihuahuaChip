@@ -15,11 +15,15 @@ SOURCES += main.cpp \
     cpu.cpp \
     displaywindow.cpp \
     jitcache.cpp \
-    emitterx64.cpp
+    emitterx64.cpp \
+    jittranslate.cpp \
+    interpreter.cpp
 
 HEADERS += \
     emulator.hpp \
     cpu.hpp \
     displaywindow.hpp \
     jitcache.hpp \
-    emitterx64.hpp
+    emitterx64.hpp \
+    jittranslate.hpp \
+    interpreter.hpp

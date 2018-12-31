@@ -13,7 +13,7 @@ struct JitBlock
 class JitCache
 {
     private:
-        constexpr static int BLOCK_SIZE = 1024;
+        constexpr static int BLOCK_SIZE = 2048;
 
         int current_block;
 
@@ -23,9 +23,14 @@ class JitCache
         ~JitCache();
 
         int alloc_block(uint16_t pc);
-        void test();
+        int set_block_rx(uint16_t pc);
+        int find_block(uint16_t pc);
+        uint8_t* get_current_block_start();
 
         void write8(uint8_t value);
+        void write16(uint16_t value);
+        void write32(uint32_t value);
+        void write64(uint64_t value);
 };
 
 #endif // JITCACHE_HPP
