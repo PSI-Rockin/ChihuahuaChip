@@ -38,10 +38,14 @@ void flush_gprs()
 
 uint8_t* exec_block()
 {
-    if (cache.find_block(cpu->get_PC()) == -1)
+    uint8_t* addr = cache.get_addr(cpu->PC);
+    if (!addr)
+    {
         recompile_block();
+        return cache.get_addr(cpu->PC);
+    }
 
-    return cache.get_current_block_start();
+    return addr;
 }
 
 void run()
@@ -49,38 +53,14 @@ void run()
     __asm__ (
         "pushq %rax\n"
         "pushq %rcx\n"
-        "pushq %rdx\n"
-        "pushq %rbx\n"
-
-        //No point in saving RSP, as we don't use it...
-        //Same for RBP, as it already gets saved by the function
-
         "pushq %rsi\n"
         "pushq %rdi\n"
-        /*"pushq %r8\n"
-        "pushq %r9\n"
-        "pushq %r10\n"
-        "pushq %r11\n"
-        "pushq %r12\n"
-        "pushq %r13\n"
-        "pushq %r14\n"
-        "pushq %r15\n"*/
 
         "callq __ZN12JitTranslate10exec_blockEv\n"
         "callq *%rax\n"
 
-        /*"popq %r15\n"
-        "popq %r14\n"
-        "popq %r13\n"
-        "popq %r12\n"
-        "popq %r11\n"
-        "popq %r10\n"
-        "popq %r9\n"
-        "popq %r8\n"*/
         "popq %rdi\n"
         "popq %rsi\n"
-        "popq %rbx\n"
-        "popq %rdx\n"
         "popq %rcx\n"
         "popq %rax\n"
     );
@@ -98,43 +78,109 @@ void recompile_block()
     printf("[JIT] Starting recompilation at $%04X\n", start_pc);
     int instructions = 0;
 
+    //Set up the stack frame
+    emitter.xPUSH(REG_64::RBP);
+    emitter.xMOV64_MR(REG_64::RSP, REG_64::RBP);
+
     while (!branch_hit)
     {
+        bool emit_instr = true;
         uint16_t instr = cpu->read16(pc);
-        //printf("[JIT] PC: $%04X\n", start_pc);
+
+        pc += 2;
+
+        emitter.xMOV64_OI((uint64_t)cpu, REG_64::RDI);
+
+        uint64_t func_addr;
         switch (instr & 0xF000)
         {
             case 0x0000:
                 switch (instr & 0xFFF)
                 {
+                    case 0xE0:
+                        emit_instr = false;
+                        func_addr = (uint64_t)Interpreter::clear;
+                        break;
                     case 0xEE:
+                        emit_instr = false;
+                        func_addr = (uint64_t)Interpreter::ret;
                         branch_hit = true;
                         break;
                 }
                 break;
             case 0x1000:
-            case 0x2000:
-            case 0x3000:
-            case 0x4000:
-            case 0xE000:
-                //jump(instr & 0xFFF);
+                func_addr = (uint64_t)Interpreter::jmp;
                 branch_hit = true;
                 break;
+            case 0x2000:
+                func_addr = (uint64_t)Interpreter::call;
+                branch_hit = true;
+                break;
+            case 0x3000:
+                func_addr = (uint64_t)Interpreter::skpe;
+                branch_hit = true;
+                break;
+            case 0x4000:
+                func_addr = (uint64_t)Interpreter::skpn;
+                branch_hit = true;
+                break;
+            case 0x6000:
+                func_addr = (uint64_t)Interpreter::ld_imm;
+                break;
+            case 0x7000:
+                func_addr = (uint64_t)Interpreter::add_imm;
+                break;
+            case 0xA000:
+                func_addr = (uint64_t)Interpreter::ld_i;
+                break;
+            case 0xD000:
+                func_addr = (uint64_t)Interpreter::draw_cpu;
+                break;
+            case 0xE000:
+                func_addr = (uint64_t)Interpreter::skpn_key;
+                branch_hit = true;
+                break;
+            case 0xF000:
+                switch (instr & 0xF)
+                {
+                    case 0x07:
+                        func_addr = (uint64_t)Interpreter::ld_reg_delay;
+                        break;
+                    case 0x15:
+                        func_addr = (uint64_t)Interpreter::ld_delay_reg;
+                        break;
+                    case 0x1E:
+                        func_addr = (uint64_t)Interpreter::add_i;
+                        break;
+                    default:
+                        printf("[JIT] Unknown F000 function $%04X\n", instr);
+                        func_addr = (uint64_t)Interpreter::interpret;
+                }
+                break;
+            default:
+                printf("[JIT] Unknown function $%04X\n", instr);
+                func_addr = (uint64_t)Interpreter::interpret;
         }
 
-        emitter.xMOV64_OI((uint64_t)cpu, REG_64::RDI);
-        emitter.xMOV64_OI(instr, REG_64::RSI);
-        emitter.xMOV64_OI((uint64_t)Interpreter::interpret, REG_64::RBX);
-        emitter.xCALL_INDIR(REG_64::RBX);
+        if (emit_instr)
+            emitter.xMOV64_OI((uint64_t)instr, REG_64::RSI);
 
-        pc += 2;
+        if (branch_hit)
+        {
+            emitter.xMOV64_OI((uint64_t)&cpu->PC, REG_64::RAX);
+            emitter.xMOV32_MI_MEM(pc, REG_64::RAX);
+        }
+
+        emitter.xCALL(func_addr);
+
         instructions++;
     }
 
     printf("[JIT] End block: $%04X\n", pc - 2);
 
-    emitter.xMOV64_OI((uint64_t)&cpu->cycles, REG_64::RBX);
-    emitter.xADD32_MI32_MEM(instructions, REG_64::RBX);
+    emitter.xMOV64_OI((uint64_t)&cpu->cycles, REG_64::RAX);
+    emitter.xADD32_MI32_MEM(instructions, REG_64::RAX);
+    emitter.xPOP(REG_64::RBP);
     emitter.xRET();
 
     cache.set_block_rx(start_pc);

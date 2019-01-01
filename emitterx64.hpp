@@ -37,10 +37,15 @@ class Emitterx64
         void xADD64_MI8(uint8_t imm, REG_64 dest);
 
         void xMOV32_MI(uint32_t imm, REG_64 dest);
+        void xMOV32_MI_MEM(uint32_t imm, REG_64 indir_dest);
         void xMOV64_MR(REG_64 source, REG_64 dest);
         void xMOV64_OI(uint64_t imm, REG_64 dest);
 
+        void xCALL(uint64_t func);
         void xCALL_INDIR(REG_64 source);
+
+        void xPUSH(REG_64 reg);
+        void xPOP(REG_64 reg);
         void xRET();
 };
 

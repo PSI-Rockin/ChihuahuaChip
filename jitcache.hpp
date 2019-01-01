@@ -13,11 +13,14 @@ struct JitBlock
 class JitCache
 {
     private:
-        constexpr static int BLOCK_SIZE = 2048;
+        constexpr static int BLOCK_SIZE = 1024;
 
         int current_block;
 
         std::vector<JitBlock> blocks;
+        uint8_t* addresses[4096];
+
+        void print_cache();
     public:
         JitCache();
         ~JitCache();
@@ -26,6 +29,8 @@ class JitCache
         int set_block_rx(uint16_t pc);
         int find_block(uint16_t pc);
         uint8_t* get_current_block_start();
+        uint8_t* get_current_addr();
+        uint8_t* get_addr(uint16_t pc);
 
         void write8(uint8_t value);
         void write16(uint16_t value);

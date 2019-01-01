@@ -50,6 +50,13 @@ void Emitterx64::xMOV32_MI(uint32_t imm, REG_64 dest)
     cache->write32(imm);
 }
 
+void Emitterx64::xMOV32_MI_MEM(uint32_t imm, REG_64 indir_dest)
+{
+    cache->write8(0xC7);
+    modrm(0, 0, indir_dest);
+    cache->write32(imm);
+}
+
 void Emitterx64::xMOV64_MR(REG_64 source, REG_64 dest)
 {
     rexw_r_rm(source, dest);
@@ -64,10 +71,31 @@ void Emitterx64::xMOV64_OI(uint64_t imm, REG_64 dest)
     cache->write64(imm);
 }
 
+void Emitterx64::xCALL(uint64_t func)
+{
+    int offset = func;
+    offset -= (uint64_t)cache->get_current_addr();
+    //printf("Offset: %llX - %llX = $%08X\n", func, cache->get_current_addr(), offset);
+    cache->write8(0xE8);
+    cache->write32(offset - 5);
+}
+
 void Emitterx64::xCALL_INDIR(REG_64 source)
 {
     cache->write8(0xFF);
     modrm(0b11, 2, source);
+}
+
+void Emitterx64::xPUSH(REG_64 reg)
+{
+    cache->write8(0xFF);
+    modrm(0b11, 6, reg);
+}
+
+void Emitterx64::xPOP(REG_64 reg)
+{
+    cache->write8(0x8F);
+    modrm(0b11, 0, reg);
 }
 
 void Emitterx64::xRET()

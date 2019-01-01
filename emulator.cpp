@@ -17,12 +17,12 @@ void Emulator::reset()
 
 void Emulator::run()
 {
-    int max_cycles = 100000;
-    /*while (cpu.cycles < max_cycles)
+    int max_cycles = 2000000;
+    while (cpu.cycles < max_cycles)
     {
         JitTranslate::run();
-    }*/
-    cpu.run(max_cycles);
+    }
+    //cpu.run(max_cycles);
     cpu.dec_delay();
     cpu.cycles -= max_cycles;
 }
